@@ -1,0 +1,2030 @@
+<script src="https://cdn.jsdelivr.net/npm/vue"></script>
+</script>
+<div id="Wizard" ">
+	<div class="regForm">
+		<h4 class="mt-n4 mb-1">1-on-1 Wizard</h4>		
+		<div style="overflow:auto;">
+		<!-- 	<div style="float:left;">
+				<a href='' target='_blank'></a>
+			</div> -->
+		<!--   <div style="float:right;">
+		    <button class="btn btn-success btn-sm" id="prevBtn" :class="[ step==0 ? 'disabled':'']" @click="nextPrev(0)">Go to Beginning</button>
+		    <button class="btn btn-primary btn-sm" id="prevBtn" :class="[ step==0 ? 'disabled':'']" @click="nextPrev(-1)">Previous</button>
+		    <button class="btn btn-primary btn-sm" id="nextBtn" :class="[ atLastStep() ? 'disabled':'']" @click="nextPrev(1)">Next</button>		    
+		  </div>	 -->	  
+		</div>	
+		<hr>	
+		<div id="Contents">
+			<span v-html="getContent()"></span>
+		</div>
+		<div id="Input" v-if="step==0">			
+<!-- 			<div class="mb-4">
+				<button class="btn btn-outline-secondary btn-sm float-right" @click="toggleURLParams()">Show URL parameters</button><br>
+				<span v-if="showURLParams"><b>URL Query parameters:</b> 
+					<br>{{urlParams}}
+			</span>			
+			</div> -->
+			<div class="text-center">
+				Click on the toggle buttons below to view potential questions for that category.<br>
+				<h6 class="mt-5">Situational Questions:</h6>
+				<span v-for="(culture, index) in cultureOptions" >
+					<div class="btn-group" role="group">
+						<span v-if="culture.type=='admin'">
+							<button type="button" class="ml-2 btn btn-outline-primary btn-sm mt-1" 
+								:class="[ cultureIsTarget(culture) ? 'active' : '']" @click="toggleSelection(culture)">{{culture.name}}</button>							
+						<span>
+					</div>
+				</span>
+				<br>
+				<h6 class="mt-4">Culture Driving Questions:</h6>
+				<span v-for="(culture, index) in cultureOptions" >
+					<div class="btn-group" role="group">
+						<span v-if="culture.type=='culture'">
+							<button type="button" class="ml-2 btn btn-outline-success btn-sm mt-1" 
+								:class="[ cultureIsTarget(culture) ? 'active' : '']" @click="toggleSelection(culture)">{{culture.name}}</button>							
+						<span>
+					</div>
+				</span>					
+			</div>	
+			<br>
+			<hr>
+			<span class="h5">Your 1-on-1 Questions 
+				<button v-if="cultureDetails.selectedQuestions.length>0" @click="copyToClipboard(cultureDetails.selectedQuestions)" class="btn btn-sm btn-link ml-2 mb-1 float-right">copy to clipboard</button>
+				<br>
+			</span> 
+			<p v-if="cultureDetails.selectedQuestions.length==0">Questions you select will be listed here.</p>
+			<span v-if="cultureDetails.selectedQuestions.length>0">
+			<!-- {{question.Question}} -->
+				<table class="table table-curved mt-4">
+					<tr v-for="(question, index) in cultureDetails.selectedQuestions"
+        				class='drag-el drop-zone' 
+				        :key='question.name' 
+        				draggable
+        				@dragstart='startDrag($event, question)'
+        				@dragend='endDrag($event)'
+						@drop='onDrop($event, index)' 
+						@dragover='dragover($event)'
+						@dragleave='dragleave($event)'
+						@dragover.prevent
+						@dragenter.prevent>
+						<td>Q{{index+1}}</td>
+						<td> {{question.Question}}</td>
+						<td>
+							<span class="badge badge-warning ml-2 mt-1" v-for="culture in question.Culture">
+							{{culture}}
+							</span>
+						</td>
+						<td>
+							<i class="fa fa-trash ml-3" style="cursor: hand" @click="toggleQuestionSelection(question)"></i>			
+						</td>
+					</tr>
+					<tr>
+						<td></td>
+						<td>
+							<input type="text" v-model="newQuestion.Question" placeholder="Enter a custom question" v-on:keyup.enter="addCustomQuestion(newQuestion.Question)"/>
+						</td>
+						<td></td>
+						<td>
+							<i class="fa fa-plus ml-3" style="cursor: hand" @click="addCustomQuestion(newQuestion.Question)"></i>
+						</td>
+					</tr>
+				</table>
+				<span class="" v-if="cultureDetails.selectedQuestions.length>0"><small>Drag  & drop to rearrange</small></span>
+			<!-- 	<p v-for="(question, index) in cultureDetails.selectedQuestions">
+						<span class="badge badge-warning ml-2" v-for="culture in question.Culture">
+							{{culture}}
+						</span>
+
+					<i class="fa fa-trash ml-3" style="cursor: hand" @click="toggleQuestionSelection(question)"></i>			
+					<br>
+				</p>
+				<br> -->			
+			</span>			
+			<span v-if="cultureDetails.targetCultures.length>0">
+				<hr class="mt-5">	
+				<h5 class="mt-2">Question Bank:</h5>
+				To add questions to your list, click any of the buttons listed below. Highlighted questions indicate that they've been selected already.
+				<template v-for="culture in cultureDetails.targetCultures">
+					<div class="card mt-4" style="width: 100%;">
+					  <div class="card-header">
+					    <h6 class="card-title">{{culture.name}} <button class="btn btn-sm btn-outline-default float-right" @click="removeCulture(culture)"> x </button></h6>
+					  </div>				
+					  <div class="card-body" style="max-height: 500;overflow-y: scroll;">		
+							<template v-for="question in questionBank">
+								<!-- <span v-if="isValidCultureQuestion(culture, question)">AAA</span> -->
+								<span v-if="isValidCultureQuestion(culture, question)">
+								<!-- {{question.Question}} -->
+									<button type="button" class="col-12 text-left ml-1 btn btn-outline-secondary mb-1" 
+										:class="[ questionIsSelected(question) ? 'active' : '']" @click="toggleQuestionSelection(question)">{{question.Question}}
+									</button>				
+									<br>			
+								</span>
+								
+							</template>
+					  	</div>
+					</div>			
+				</template>		
+			</span>									
+		</div>
+	</div>
+</div>
+
+<script>
+var myViewModel = new Vue({
+ 	el: '#Wizard',
+	data: {  
+		step: 0,
+		errorMessage:"",
+		urlParams:"",
+		showURLParams: false,
+		newQuestion:{ Question:"" },
+
+		questionBank:
+		[
+		 {
+		   "Id": 1,
+		   "Question": "Whats new?",
+		   "Culture": [
+		      "Intro",
+		         ]
+		},
+		 {
+		   "Id": 2,
+		   "Question": "Do you have any items to discuss today?",
+		   "Culture": [
+		      "Intro",
+		         ]
+		},
+		 {
+		   "Id": 3,
+		   "Question": "What would you like to discuss in your 1-1s next week?",
+		   "Culture": [
+		      "Conclusions",
+		      "Results",   ]
+		},
+		 {
+		   "Id": 4,
+		   "Question": "What's on your mind this week?",
+		   "Culture": [
+		      "Intro",
+  			]
+		},
+		 {
+		   "Id": 5,
+		   "Question": "Is there anything we didn't cover that you'd like to discuss next time?",
+		   "Culture": [
+		      
+		      "Conclusions",
+		      ]
+		},
+		 {
+		   "Id": 6,
+		   "Question": "What is one thing I can do to make your life better at work?",
+		   "Culture": [
+		      
+		      "Caring",   ]
+		},
+		 {
+		   "Id": 7,
+		   "Question": "Where would you like to be in 6 months?",
+		   "Culture": [
+		      
+		      "Purpose",   ]
+		},
+		 {
+		   "Id": 8,
+		   "Question": "Describe a great day at work. What activities give you energy?",
+		   "Culture": [
+		      
+		      "Enjoyment",   ]
+		},
+		 {
+		   "Id": 9,
+		   "Question": "What activities drain you?",
+		   "Culture": [
+		      
+		      "Enjoyment",   ]
+		},
+		 {
+		   "Id": 10,
+		   "Question": "How are you feeling?",
+		   "Culture": [
+		      "Intro",
+		      
+		      "Caring",   ]
+		},
+		 {
+		   "Id": 11,
+		   "Question": "What did you focus on this week?",
+		   "Culture": [
+		      "Intro",
+		      
+		      "Results",
+		      "Authority",   ]
+		},
+		 {
+		   "Id": 12,
+		   "Question": "What are your plans and priorities for next week?",
+		   "Culture": [
+		      
+		      "Results",
+		      "Authority",   ]
+		},
+		 {
+		   "Id": 13,
+		   "Question": "What challenges or roadblocks do you need help with?",
+		   "Culture": [
+		      
+		      "Results",   ]
+		},
+		 {
+		   "Id": 14,
+		   "Question": "Is there anything else on your mind?",
+		   "Culture": [
+		      
+		      "Conclusions",
+		      "Caring",   ]
+		},
+		 {
+		   "Id": 15,
+		   "Question": "How can we help improve your day-to-day work?",
+		   "Culture": [
+		      
+		      "Caring",   ]
+		},
+		 {
+		   "Id": 16,
+		   "Question": "How are you feeling about the project?",
+		   "Culture": [
+		      
+		      "Caring",
+		      "Learning",
+		      "Enjoyment",   ]
+		},
+		 {
+		   "Id": 17,
+		   "Question": "What do you want to work on next quarter?",
+		   "Culture": [
+		      
+		      "Caring",
+		      "Learning",
+		      "Enjoyment",
+		      "Safety",   ]
+		},
+		 {
+		   "Id": 18,
+		   "Question": "A year from now, what do you want to have accomplished?",
+		   "Culture": [
+		      
+		      "Purpose",
+		      "Learning",   ]
+		},
+		 {
+		   "Id": 19,
+		   "Question": "Where do you see yourself in 5 years? 10 years? 20 years?",
+		   "Culture": [
+		         ]
+		},
+		 {
+		   "Id": 20,
+		   "Question": "What's the biggest opportunity that we're not thinking about?",
+		   "Culture": [
+		      
+		      "Learning",   ]
+		},
+		 {
+		   "Id": 21,
+		   "Question": "How can the team work better together? Where are we failing? Where are we succeeding?",
+		   "Culture": [
+		      
+		      "Enjoyment",
+		      "Order"
+		   ]
+		},
+		 {
+		   "Id": 22,
+		   "Question": "What's your least favorite thing about the product?",
+		   "Culture": [
+		         ]
+		},
+		 {
+		   "Id": 23,
+		   "Question": "How are you feeling about the company's future? Why do you say that?",
+		   "Culture": [
+		      
+		      "Purpose",
+		      "Enjoyment",   ]
+		},
+		 {
+		   "Id": 24,
+		   "Question": "If you were the CEO, what changes would you make?",
+		   "Culture": [
+		      
+		      "Learning",   ]
+		},
+		 {
+		   "Id": 25,
+		   "Question": "Do you feel like we're helping to advance your career? What else can I be doing to help grow your career?",
+		   "Culture": [
+		      
+		      "Caring",
+		      "Purpose",
+		      "Learning",   ]
+		},
+		 {
+		   "Id": 26,
+		   "Question": "Do you feel like you're learning at work?",
+		   "Culture": [
+		      
+		      "Learning",   ]
+		},
+		 {
+		   "Id": 27,
+		   "Question": "What projects are you most proud of? What do you want to work on next?",
+		   "Culture": [
+		      
+		      "Caring",
+		      "Purpose",
+		      "Learning",
+		      "Enjoyment",   ]
+		},
+		 {
+		   "Id": 28,
+		   "Question": "If you were not a [position], what do you want to be?",
+		   "Culture": [
+		      
+		      "Purpose",
+		      "Learning",   ]
+		},
+		 {
+		   "Id": 29,
+		   "Question": "What's a professional development project you'd like to pursue?",
+		   "Culture": [
+		      
+		      "Purpose",
+		      "Learning",   ]
+		},
+		 {
+		   "Id": 30,
+		   "Question": "How can I be a better manager?",
+		   "Culture": [
+		      
+		      "Caring",
+		      "Safety",   ]
+		},
+		 {
+		   "Id": 31,
+		   "Question": "How can I make your work easier?",
+		   "Culture": [
+		      
+		      "Caring",
+		      "Safety",   ]
+		},
+		 {
+		   "Id": 32,
+		   "Question": "What areas of your work do you want more/less direction from me?",
+		   "Culture": [
+		      
+		      "Caring",
+		      "Learning",
+		      "Results",   ]
+		},
+		 {
+		   "Id": 33,
+		   "Question": "What additional resources do you need?",
+		   "Culture": [
+		      
+		      "Caring",   ]
+		},
+		 {
+		   "Id": 34,
+		   "Question": "How can we improve these 1:1s?",
+		   "Culture": [
+		      
+		      "Caring",   ]
+		},
+		 {
+		   "Id": 35,
+		   "Question": "Are you happy?",
+		   "Culture": [
+		      
+		      "Caring",
+		      "Enjoyment",   ]
+		},
+		 {
+		   "Id": 36,
+		   "Question": "What's not fun about working here?",
+		   "Culture": [
+		      
+		      "Caring",
+		      "Enjoyment",   ]
+		},
+		 {
+		   "Id": 37,
+		   "Question": "Do you feel like you have a good work-life balance?",
+		   "Culture": [
+		      
+		      "Caring",
+		      "Enjoyment",   ]
+		},
+		 {
+		   "Id": 38,
+		   "Question": "I've noticed you're a little (adjective) than usual. Is there anything you want to talk about?",
+		   "Culture": [
+		      
+		      "Caring",   ]
+		},
+		 {
+		   "Id": 39,
+		   "Question": "What do you want to do but don't feel like you have the time for?",
+		   "Culture": [
+		      
+		      "Caring",
+		      "Learning",
+		      "Enjoyment",   ]
+		},
+		 {
+		   "Id": 40,
+		   "Question": "How is everything going today? Tell me about this last week?",
+		   "Culture": [
+		      
+		      "Caring",
+		      "Results",   ]
+		},
+		 {
+		   "Id": 41,
+		   "Question": "Last time we spoke you said X was a challenge for you, how is that going?",
+		   "Culture": [
+		      
+		      "Caring",
+		      "Results",   ]
+		},
+		 {
+		   "Id": 42,
+		   "Question": "What are your plans and priorities this week?",
+		   "Culture": [
+		      
+		      "Results",   ]
+		},
+		 {
+		   "Id": 43,
+		   "Question": "What's one thing (or a few) you learned this week?",
+		   "Culture": [
+		      
+		      "Learning",   ]
+		},
+		 {
+		   "Id": 44,
+		   "Question": "How are you/your team progressing towards established goals?",
+		   "Culture": [
+		      
+		      "Results",   ]
+		},
+		 {
+		   "Id": 45,
+		   "Question": "What are two or three new skills you'd like to learn on the job?",
+		   "Culture": [
+		      
+		      "Learning",   ]
+		},
+		 {
+		   "Id": 46,
+		   "Question": "How are you progressing towards your bigger career and life goals?",
+		   "Culture": [
+		      
+		      "Caring",
+		      "Learning",   ]
+		},
+		 {
+		   "Id": 47,
+		   "Question": "Is there someone at the company (or outside) that you'd like to learn from?",
+		   "Culture": [
+		      
+		      "Learning",   ]
+		},
+		 {
+		   "Id": 48,
+		   "Question": "What progress have you made on your career goals this week?",
+		   "Culture": [
+		      
+		      "Learning",   ]
+		},
+		 {
+		   "Id": 49,
+		   "Question": "What are you committing to between now and the next time we meet?",
+		   "Culture": [
+		      
+		      "Results",   ]
+		},
+		 {
+		   "Id": 50,
+		   "Question": "What can I help you with between now and the next time we meet?",
+		   "Culture": [
+		      
+		      "Results",   ]
+		},
+		 {
+		   "Id": 51,
+		   "Question": "What work are you doing here that you feel is most in line with your long term goals?",
+		   "Culture": [
+		      
+		      "Learning",   ]
+		},
+		 {
+		   "Id": 52,
+		   "Question": "What are your superpowers? What powers would you like to develop?",
+		   "Culture": [
+		      
+		      "Learning",   ]
+		},
+		 {
+		   "Id": 53,
+		   "Question": "What do you want to do in your next job?",
+		   "Culture": [
+		      
+		      "Learning",   ]
+		},
+		 {
+		   "Id": 54,
+		   "Question": "Do you feel challenged at work? Are you learning new things?",
+		   "Culture": [
+		      
+		      "Learning",   ]
+		},
+		 {
+		   "Id": 55,
+		   "Question": "What area of the company would you like to learn more about?",
+		   "Culture": [
+		      
+		      "Learning",   ]
+		},
+		 {
+		   "Id": 56,
+		   "Question": "What skills would you like to develop right now?",
+		   "Culture": [
+		      
+		      "Learning",   ]
+		},
+		 {
+		   "Id": 57,
+		   "Question": "What additional training or education would you like?",
+		   "Culture": [
+		      
+		      "Learning",   ]
+		},
+		 {
+		   "Id": 58,
+		   "Question": "What do you think are the key skills for your role? How would you rate yourself for each of them?",
+		   "Culture": [
+		      
+		      "Learning",   ]
+		},
+		 {
+		   "Id": 59,
+		   "Question": "On a scale of 1-10, how closely does this job resemble your dream job?",
+		   "Culture": [
+		      
+		      "Flight Risk",
+		      "Enjoyment",   ]
+		},
+		 {
+		   "Id": 60,
+		   "Question": "Are you able to maintain a positive work-life balance?",
+		   "Culture": [
+		      
+		      "Flight Risk",
+		      "Caring",
+		      "Enjoyment",
+		      "Safety",
+		      "Order"
+		   ]
+		},
+		 {
+		   "Id": 61,
+		   "Question": "Do you regard your peers as friends, acquaintances, or just coworkers?",
+		   "Culture": [
+		      
+		      "Flight Risk",
+		      "Safety",   ]
+		},
+		 {
+		   "Id": 62,
+		   "Question": "How much do you look forward to Fridays? Do you dread Mondays?",
+		   "Culture": [
+		      
+		      "Flight Risk",
+		      "Enjoyment",
+		      "Safety",   ]
+		},
+		 {
+		   "Id": 63,
+		   "Question": "Is there anything that we could do to make doing your job easier?",
+		   "Culture": [
+		      
+		      "Flight Risk",
+		      "Enjoyment",   ]
+		},
+		 {
+		   "Id": 64,
+		   "Question": "Is there anything or anyone making you feel disrespected at work?",
+		   "Culture": [
+		      
+		      "Flight Risk",
+		      "Caring",
+		      "Enjoyment",   ]
+		},
+		 {
+		   "Id": 65,
+		   "Question": "What have you enjoyed most about working here?",
+		   "Culture": [
+		      
+		      "Flight Risk",   ]
+		},
+		 {
+		   "Id": 66,
+		   "Question": "What are your favorite and least favorite projects to work on?",
+		   "Culture": [
+		      
+		      "Flight Risk",
+		      "Enjoyment",   ]
+		},
+		 {
+		   "Id": 67,
+		   "Question": "Do you see yourself working here a year from now? In two years?",
+		   "Culture": [
+		      
+		      "Flight Risk",
+		      "Enjoyment",
+		      "Safety",   ]
+		},
+		 {
+		   "Id": 68,
+		   "Question": "What do you like most and least about this company?",
+		   "Culture": [
+		      
+		      "Flight Risk",
+		      "Caring",   ]
+		},
+		 {
+		   "Id": 69,
+		   "Question": "How satisfied are you about how this company takes care of you?",
+		   "Culture": [
+		      
+		      "Flight Risk",
+		      "Enjoyment",   ]
+		},
+		 {
+		   "Id": 70,
+		   "Question": "Have you ever thought about other opportunities?",
+		   "Culture": [
+		      
+		      "Flight Risk",
+		      "Caring",
+		      "Enjoyment",   ]
+		},
+		 {
+		   "Id": 71,
+		   "Question": "Have you been provided with enough development opportunities?",
+		   "Culture": [
+		      
+		      "Flight Risk",
+		      "Learning",   ]
+		},
+		 {
+		   "Id": 72,
+		   "Question": "Have you been provided with a clear growth path?",
+		   "Culture": [
+		      
+		      "Flight Risk",
+		      "Learning",   ]
+		},
+		 {
+		   "Id": 73,
+		   "Question": "Do you have suggestions on we could improve employee engagement?",
+		   "Culture": [
+		      
+		      "Flight Risk",   ]
+		},
+		 {
+		   "Id": 74,
+		   "Question": "What talents or skills do you have that we haven't tapped into yet?",
+		   "Culture": [
+		      
+		      "Flight Risk",
+		      "Learning",   ]
+		},
+		 {
+		   "Id": 75,
+		   "Question": "Do you feel your ideas and suggestions are given consideration?",
+		   "Culture": [
+		      
+		      "Flight Risk",
+		      "Enjoyment",   ]
+		},
+		 {
+		   "Id": 76,
+		   "Question": "Do you feel your progression within the company is encouraged?",
+		   "Culture": [
+		      
+		      "Flight Risk",
+		      "Learning",   ]
+		},
+		 {
+		   "Id": 77,
+		   "Question": "If you could change one thing to improve morale, what would it be?",
+		   "Culture": [
+		      
+		      "Flight Risk",
+		      "Enjoyment",   ]
+		},
+		 {
+		   "Id": 78,
+		   "Question": "Do you feel you're getting enough feedback on your work? If not, where would you like more feedback?",
+		   "Culture": [
+		         ]
+		},
+		 {
+		   "Id": 79,
+		   "Question": "What has been the work highlight/lowlight from the past week?",
+		   "Culture": [
+		      
+		      "Enjoyment",   ]
+		},
+		 {
+		   "Id": 80,
+		   "Question": "Who's someone in the company that you'd like to learn more from?",
+		   "Culture": [
+		      
+		      "Learning",   ]
+		},
+		 {
+		   "Id": 81,
+		   "Question": "What projects would you like to work on or be more involved in?",
+		   "Culture": [
+		      
+		      "Learning",   ]
+		},
+		 {
+		   "Id": 82,
+		   "Question": "What professional goals would you like to accomplish in the next 6 to 12 months, and what makes you say that?",
+		   "Culture": [
+		      
+		      "Caring",
+		      "Learning",
+		      "Enjoyment",   ]
+		},
+		 {
+		   "Id": 83,
+		   "Question": "What's something you're itching to try that you haven't had the time or resources to do?",
+		   "Culture": [
+		      
+		      "Caring",
+		      "Enjoyment",   ]
+		},
+		 {
+		   "Id": 84,
+		   "Question": "Is your job what you expected when you accepted it? If not, where has it differed?",
+		   "Culture": [
+		      
+		      "Caring",
+		      "Learning",   ]
+		},
+		 {
+		   "Id": 85,
+		   "Question": "What other roles at [your company] do you find interesting? What skills do those roles require that you would like to work on?",
+		   "Culture": [
+		      
+		      "Caring",   ]
+		},
+		 {
+		   "Id": 86,
+		   "Question": "What else can I be doing to help progress your career?",
+		   "Culture": [
+		         ]
+		},
+		 {
+		   "Id": 87,
+		   "Question": "What are your work and non-work highlights of the past month?",
+		   "Culture": [
+		         ]
+		},
+		 {
+		   "Id": 88,
+		   "Question": "What's one thing you'd like to do more of, outside of work this coming month?",
+		   "Culture": [
+		         ]
+		},
+		 {
+		   "Id": 89,
+		   "Question": "What's one thing we can do to improve the performance of the team?",
+		   "Culture": [
+		         ]
+		},
+		 {
+		   "Id": 90,
+		   "Question": "Are you happy with our level of communication? How would you change it?",
+		   "Culture": [
+		         ]
+		},
+		 {
+		   "Id": 91,
+		   "Question": "What's top of mind right now that we haven't talked about yet?",
+		   "Culture": [
+		         ]
+		},
+		 {
+		   "Id": 92,
+		   "Question": "If you were managing the team, what would you do differently?",
+		   "Culture": [
+		         ]
+		},
+		 {
+		   "Id": 93,
+		   "Question": "Who is doing a great job on the team? What have they done?",
+		   "Culture": [
+		         ]
+		},
+		 {
+		   "Id": 94,
+		   "Question": "Am I acting like the best manager you could wish for? What could I be doing better?",
+		   "Culture": [
+		         ]
+		},
+		 {
+		   "Id": 95,
+		   "Question": "When's the best time to give feedback on your work?",
+		   "Culture": [
+		         ]
+		},
+		 {
+		   "Id": 96,
+		   "Question": "Where has our communication faltered? Can you give me an example?",
+		   "Culture": [
+		         ]
+		},
+		 {
+		   "Id": 97,
+		   "Question": "Is there anything that would be productive for me to re-explain to our team?",
+		   "Culture": [
+		         ]
+		},
+		 {
+		   "Id": 98,
+		   "Question": "Am I providing enough clarity on our direction?",
+		   "Culture": [
+		         ]
+		},
+		 {
+		   "Id": 99,
+		   "Question": "Where would you like me involved more in your day to day? Where would you like me involved less?",
+		   "Culture": [
+		         ]
+		},
+		 {
+		   "Id": 100,
+		   "Question": "What needs to change around our team meetings?",
+		   "Culture": [
+		         ]
+		},
+		 {
+		   "Id": 101,
+		   "Question": "What do you like about our one-on-one meetings? What can be improved?",
+		   "Culture": [
+		         ]
+		},
+		 {
+		   "Id": 102,
+		   "Question": "Are there any roles on the team that you feel unclear on?",
+		   "Culture": [
+		         ]
+		},
+		 {
+		   "Id": 103,
+		   "Question": "What are your top priorities this week?",
+		   "Culture": [
+		         ]
+		},
+		 {
+		   "Id": 104,
+		   "Question": "What's a problem we have on our team that I might not know about?",
+		   "Culture": [
+		         ]
+		},
+		 {
+		   "Id": 105,
+		   "Question": "What can I hold you accountable for next time we talk?",
+		   "Culture": [
+		         ]
+		},
+		 {
+		   "Id": 106,
+		   "Question": "How could we improve cross-functional collaboration at [your company]?",
+		   "Culture": [
+		         ]
+		},
+		 {
+		   "Id": 107,
+		   "Question": "What's one thing I can do right now to make work better for you?",
+		   "Culture": [
+		         ]
+		},
+		 {
+		   "Id": 108,
+		   "Question": "Where do you need help?",
+		   "Culture": [
+		         ]
+		},
+		 {
+		   "Id": 109,
+		   "Question": "Do you have any questions about what other team members are working on?",
+		   "Culture": [
+		         ]
+		},
+		 {
+		   "Id": 110,
+		   "Question": "What do you need? What could make your day-to-day easier?",
+		   "Culture": [
+		         ]
+		},
+		 {
+		   "Id": 111,
+		   "Question": "If you were a hiring manager for our team, what role would be your next hire?",
+		   "Culture": [
+		         ]
+		},
+		 {
+		   "Id": 112,
+		   "Question": "What's something you'd like to share but is a little stressful to bring up in person?",
+		   "Culture": [
+		         ]
+		},
+		 {
+		   "Id": 113,
+		   "Question": "What's your outlook on next week?",
+		   "Culture": [
+		         ]
+		},
+		 {
+		   "Id": 114,
+		   "Question": "Do you have any questions that, if answered, would help you in your day-to-day?",
+		   "Culture": [
+		         ]
+		},
+		 {
+		   "Id": 115,
+		   "Question": "What are you least clear about, in terms of our company-wide strategy and goals?",
+		   "Culture": [
+		         ]
+		},
+		 {
+		   "Id": 116,
+		   "Question": "Do I have anything outstanding for you that I haven't done yet?",
+		   "Culture": [
+		         ]
+		},
+		 {
+		   "Id": 117,
+		   "Question": "What, if anything, is stressing you out?",
+		   "Culture": [
+		         ]
+		},
+		 {
+		   "Id": 118,
+		   "Question": "What, if anything, feels harder than it should be in your day to day work?",
+		   "Culture": [
+		         ]
+		},
+		 {
+		   "Id": 119,
+		   "Question": "Which time of day do you feel most productive?",
+		   "Culture": [
+		      
+		      "Enjoyment",   ]
+		},
+		 {
+		   "Id": 120,
+		   "Question": "What changes could be made so you can optimize your day?",
+		   "Culture": [
+		      
+		      "Enjoyment",
+		      "Results",   ]
+		},
+		 {
+		   "Id": 121,
+		   "Question": "What are your biggest time wasters right now?",
+		   "Culture": [
+		      
+		      "Results",
+		      "Authority",
+		      "Safety",
+		      "Order"
+		   ]
+		},
+		 {
+		   "Id": 122,
+		   "Question": "Are you encountering any roadblocks and if so, what are they?",
+		   "Culture": [
+		      
+		      "Results",
+		      "Authority",
+		      "Safety",
+		      "Order"
+		   ]
+		},
+		 {
+		   "Id": 123,
+		   "Question": "What in particular do you enjoy about working here?",
+		   "Culture": [
+		      
+		      "Enjoyment",   ]
+		},
+		 {
+		   "Id": 124,
+		   "Question": "What do you least prefer doing and why?",
+		   "Culture": [
+		      
+		      "Caring",
+		      "Enjoyment",   ]
+		},
+		 {
+		   "Id": 125,
+		   "Question": "What keeps you engaged and inspired at work?",
+		   "Culture": [
+		      
+		      "Caring",
+		      "Enjoyment",   ]
+		},
+		 {
+		   "Id": 126,
+		   "Question": "Do you have any concerns when it comes to your role or career opportunities?",
+		   "Culture": [
+		      
+		      "Caring",
+		      "Learning",   ]
+		},
+		 {
+		   "Id": 127,
+		   "Question": "How are you progressing on your goals? Do you need any help?",
+		   "Culture": [
+		      
+		      "Results",   ]
+		},
+		 {
+		   "Id": 128,
+		   "Question": "Are you facing any bottlenecks? What might help remove them?",
+		   "Culture": [
+		      
+		      "Results",   ]
+		},
+		 {
+		   "Id": 129,
+		   "Question": "How have you determined your longer term goals?",
+		   "Culture": [
+		      
+		      "Results",   ]
+		},
+		 {
+		   "Id": 130,
+		   "Question": "Which part of your job do you feel is the most relevant to your long-term goals?",
+		   "Culture": [
+		      
+		      "Purpose",
+		      "Results",   ]
+		},
+		 {
+		   "Id": 131,
+		   "Question": "How do you like to learn?",
+		   "Culture": [
+		      
+		      "Caring",
+		      "Learning",   ]
+		},
+		 {
+		   "Id": 132,
+		   "Question": "What are some skills you would like to develop?",
+		   "Culture": [
+		      
+		      "Caring",
+		      "Learning",   ]
+		},
+		 {
+		   "Id": 133,
+		   "Question": "What are some experiences you would like to gain?",
+		   "Culture": [
+		      
+		      "Caring",
+		      "Learning",   ]
+		},
+		 {
+		   "Id": 134,
+		   "Question": "What do you enjoy most and least about your job?",
+		   "Culture": [
+		      
+		      "Caring",
+		      "Learning",   ]
+		},
+		 {
+		   "Id": 135,
+		   "Question": "What projects have you enjoyed working on recently, and why?",
+		   "Culture": [
+		      
+		      "Caring",
+		      "Learning",   ]
+		},
+		 {
+		   "Id": 136,
+		   "Question": "Would you benefit from more coaching?",
+		   "Culture": [
+		      
+		      "Caring",
+		      "Learning",   ]
+		},
+		 {
+		   "Id": 137,
+		   "Question": "How can I better support you in your job?",
+		   "Culture": [
+		      
+		      "Enjoyment",
+		      "Results",   ]
+		},
+		 {
+		   "Id": 138,
+		   "Question": "Do you find my communication clear and easy to understand, or is there something I can do to improve?",
+		   "Culture": [
+		      
+		      "Caring",   ]
+		},
+		 {
+		   "Id": 139,
+		   "Question": "Do I clearly communicate our company's vision and mission to you?",
+		   "Culture": [
+		      
+		      "Purpose",
+		      "Results",   ]
+		},
+		 {
+		   "Id": 140,
+		   "Question": "Are our team vision and goals clear to you?",
+		   "Culture": [
+		      
+		      "Purpose",   ]
+		},
+		 {
+		   "Id": 141,
+		   "Question": "Do you feel empowered in your role?",
+		   "Culture": [
+		      
+		      "Caring",
+		      "Purpose",
+		      "Enjoyment",   ]
+		},
+		 {
+		   "Id": 142,
+		   "Question": "Do you feel supported in your career development?",
+		   "Culture": [
+		      
+		      "Caring",
+		      "Learning",
+		      "Enjoyment",   ]
+		},
+		 {
+		   "Id": 143,
+		   "Question": "Can you come back with some ideas on what goals you want to achieve",
+		   "Culture": [
+		      
+		      "Caring",
+		      "Learning",   ]
+		},
+		 {
+		   "Id": 144,
+		   "Question": "Can you come back with some ideas on what skills you want to achieve",
+		   "Culture": [
+		      
+		      "Caring",
+		      "Learning",   ]
+		},
+		 {
+		   "Id": 145,
+		   "Question": "Please come back with this item next week",
+		   "Culture": [
+		      "Administrative",
+		         ]
+		},
+		 {
+		   "Id": 146,
+		   "Question": "What is the status of your action items?",
+		   "Culture": [
+		      "Administrative",
+		      "Results",
+		         ]
+		}		
+		],
+		releaseBuildInstructions:[],
+		cultureDetails : 
+		{
+			name: "",
+			mcm: "",
+			selectedQuestionIds:{},
+			selectedQuestions:[],
+			targetCultureNames:{},
+			targetCultures: []
+		},
+		cultureOptions: [
+			{
+				name: "Administrative",
+				type: 'admin',
+			},									
+			{
+				name: "Intro"
+				,type: 'admin',
+			},
+			{
+				name: "Conclusions"
+				,type: 'admin',
+			},
+			{
+				name: "Flight Risk"
+				,type: 'admin',
+			},
+			{
+				name: "Caring"
+				,type: 'culture',
+			},
+			{
+				name: "Purpose"
+				,type: 'culture',
+			},
+			{
+				name: "Learning"
+				,type: 'culture',
+			},
+			{
+				name: "Enjoyment"
+				,type: 'culture',
+			},
+			{
+				name: "Results"
+				,type: 'culture',
+			},
+			{
+				name: "Authority"
+				,type: 'culture',
+			},
+			{
+				name: "Safety"
+				,type: 'culture',
+			},			
+			{
+				name: "Order"
+				,type: 'culture',
+			},			
+		]
+	},
+	mounted()
+	{
+	},
+	methods: 
+	{	
+		createStringFromTemplate(template, variables) 
+		{
+	   		return template.replace(new RegExp("\{([^\{]+)\}", "g"), function(_unused, varName)
+	   		{
+	        	return variables[varName];
+	        });
+	    },
+	    getStep(step)
+	    {
+	    	return this.releaseBuildInstructions[step];
+	    },
+	    getStepGenericInstructions(step)
+	    {
+	    	var content="";
+	    	var step = this.getStep(step);
+	    	if (!step) {
+	    		return;
+    		}
+			content+=step.genericContent;
+
+			if (step.parameters!=undefined)
+			{
+				content = this.replaceGenericParameters(content, step.parameters);	
+			}						
+			return content;
+	    },
+	    getStepDeviceSpecificInstructions(step)
+	    {
+	    	var content="";
+	    	var tempContent="";
+	    	var step = this.getStep(step);
+	    	if (step && step.deviceSpecificContent)
+	    	{
+	    		for (var i =0; i< this.releaseDetails.targetDevices.length; i++) 
+	    		{
+	    			var device = this.releaseDetails.targetDevices[i];
+	    			
+					tempContent=step.deviceSpecificContent;
+					if (step.parameters!=undefined)
+					{
+						var temp = this.replaceDeviceSpecificParameters(tempContent, step.parameters, device);	
+						content+=temp;
+					}		    								
+	    		}
+	    	}
+	    	
+	    	return content ;
+	    },	    
+		getContent()
+		{
+			if (this.step==0)
+			{
+				return;
+			}
+			else
+			{
+				var content="";
+				content +=this.getStepTitle(this.step);
+				
+				content+=this.getStepGenericInstructions(this.step);
+
+				content+=this.getStepDeviceSpecificInstructions(this.step);
+				return content;
+			}
+		},
+		isValidCultureQuestion(culture, question)
+		{
+			// console.log(question.Culture, culture.name);
+			if (question.Culture.includes(culture.name))
+			{
+				return true;
+			}
+			return false;
+		},
+		getValue(params, device, stringValues)
+		{
+			var filledInString="";
+			if (params=='crlinks')
+			{
+
+				filledInString =this.getCRLinkText(device);
+				stringValues[params]=filledInString;
+			}
+			else if (params=='testingInstructions')
+			{
+				filledInString= this.getTestingInstructionsText(device);
+				stringValues[params]=filledInString;
+			}
+			else if (params =='fieldInfo')
+			{
+				filledInString = this.getGerritCRFieldInfo(device);
+				stringValues[params]=filledInString;				
+			}		
+			else if (params =='patchBuildInfo')
+			{
+				filledInString = this.getPatchBuildInfo(device);
+				stringValues[params]=filledInString;				
+			}					
+			else if (params =='mergeInstructions')
+			{
+				var merge =this.specialInstructions.genericMergeInstructions;
+				if (device.name==Raven)
+				{
+					merge=this.specialInstructions.ravenMergeInstructions;
+				}
+				else if (device.name==Auto)
+				{
+					merge=this.specialInstructions.skipStep;
+				}
+				filledInString =merge
+				stringValues[params]=filledInString;				
+			}
+			else if (params=='productName')
+			{
+				filledInString =device.productName;	
+				stringValues[params]=filledInString;
+			}				
+			else if (params=='changeIdPatchset')
+			{
+				filledInString =this.getPatchset(device);
+				stringValues[params]=filledInString;				
+			}
+			else if (params=='patchlinks')
+			{
+				filledInString =this.getPatchText(device);
+				stringValues[params]=filledInString;
+			}				
+			else if (params=='releaseBigVersion')
+			{
+				var version = this.releaseDetails.name.split('.');
+				console.log(version);
+
+				filledInString = version[0]+'.'+version[1];
+				stringValues[params]=filledInString;
+			}
+			else if (params=='releaseName')
+			{
+				filledInString = this.releaseDetails.name;	
+				stringValues[params]=filledInString;
+			}	
+			else if (params=='s3Key')
+			{
+				filledInString = this.getS3KeyText(device);
+				stringValues[params]=filledInString;
+			}
+			else if (params=='branch')
+			{
+				filledInString = this.getBranchText(device);
+				stringValues[params]=filledInString;
+			}				
+			else if (params=='deviceName')
+			{
+				filledInString = device.name;	
+				stringValues[params]=filledInString;					
+			}
+			return stringValues;
+		},
+		replaceDeviceSpecificParameters(content, parameters, device)
+		{
+			var stringValues={};
+
+			for (var i=0; i<parameters.length; i++)
+			{
+				var params = parameters[i];
+				stringValues = this.getValue(params, device, stringValues);
+			}
+			content = this.createStringFromTemplate(
+				    content,
+				    stringValues
+				);				
+			return content;
+		},			
+		getS3FolderPath()
+		{
+			return "s3://alexa-hybrid-artifacts/releases/ahe-"+ this.releaseDetails.name+"/ahe-"+this.releaseDetails.name+"-weekly/";	
+		},
+		getS3TarballFilename(targetDevice)
+		{
+			return "ahe-"+this.releaseDetails.name+"-weekly_"+targetDevice.artifactPrefix+"_YYYY-MM-DD-HH-MM-ss.tar.gz";
+		},		
+		getPatchText(device)
+		{
+			var patchLink = this.getPatchLink(device);
+			var text="";
+			if (device.name==Auto)
+			{
+				text +=this.specialInstructions.skipStep;
+			}
+			else
+			{
+				text ="<a href='"+ patchLink + "' target='_blank'>"+patchLink+"</a>";		
+			}
+			
+			return text;
+		},
+		getPatchLink(targetDevice)
+		{
+			var link="";
+			if (targetDevice.name==Raven && targetDevice.patchBuildPrefix.name!=raven_mainline)
+			{
+				//very brittle!
+				var prefix = targetDevice.patchBuildPrefix.name.split("_");
+				if (prefix.length==3)
+				{
+					var number =prefix[2];
+					var version = number.charAt(0)+'.'+number.charAt(1)+'.'+number.charAt(2)+'.'+number.charAt(3);
+					link = "https://acos2014-jenkins.labcollab.net/jenkins/view/FireOS%207.x/view/Ship%20" +version +"/job/" +targetDevice.patchBuildPrefix.name +"-patch-build/build?delay=0sec";	
+				}
+			}
+			else
+			{
+				link = targetDevice.patchLink + targetDevice.patchBuildPrefix.name +"-patch-build/build?delay=0sec";	
+			}
+		 	
+			return link;
+		},
+		replaceGenericParameters(content, parameters)
+		{
+			var stringValues={};
+			for (var i=0; i<parameters.length; i++)
+			{
+				var params = parameters[i];
+				var filledInString="";
+				if (params=='artifacts')
+				{
+					filledInString +="<li><b>Folder location: </b>"+this.getS3FolderPath()+"</li>";					
+
+					for (var j=0; j<this.releaseDetails.targetDevices.length; j++)
+					{
+						var targetDevice = this.releaseDetails.targetDevices[j];
+						filledInString +="<li><b>"+targetDevice.name+" tarball name: </b>"+this.getS3TarballFilename(targetDevice)+"</li>";
+					}				
+					stringValues[params]=filledInString;
+				}
+				else if (params=='releaseBigVersion')
+				{
+					stringValues= this.getValue(params, null, stringValues);
+				}				
+				else if (params=='releaseName')
+				{
+					stringValues= this.getValue(params, null, stringValues);
+				}
+				else if (params=='devicesNotTesting')
+				{
+					for (var j=0; j<this.releaseDetails.targetDevices.length; j++)
+					{
+						var targetDevice = this.releaseDetails.targetDevices[j];
+						if (targetDevice.releaseTestingPossible==false)
+						{
+							if (filledInString=="")
+							{
+								filledInString="These targets won't be release tested: "
+							}
+							filledInString +=targetDevice.name +', ';
+						}
+						
+					}	
+					filledInString = filledInString.slice(0,-2);			
+					stringValues[params]=filledInString;					
+				}
+				else if (params=='deviceStatus')
+				{
+					for (var j=0; j<this.releaseDetails.targetDevices.length; j++)
+					{
+						var targetDevice = this.releaseDetails.targetDevices[j];
+						if (targetDevice.releaseTestingPossible==true)
+						{
+							filledInString +="<th>"+targetDevice.name+" Status</th>";
+						}
+					}				
+					stringValues[params]=filledInString;
+				}		
+				else if (params=='tableCellFill')
+				{
+					for (var j=0; j<this.releaseDetails.targetDevices.length; j++)
+					{
+						var targetDevice = this.releaseDetails.targetDevices[j];
+						if (targetDevice.releaseTestingPossible==true)
+						{
+							filledInString +="<td></td>";
+						}						
+					}				
+					stringValues[params]=filledInString;						
+				}	
+				else if (params='mcm')
+				{
+					filledInString +="<a href='"+this.releaseDetails.mcm+"' target='_blank'>MCM Link</a>";
+					stringValues[params]=filledInString;
+				}	
+			}
+			content = this.createStringFromTemplate(
+				    content,
+				    stringValues
+				);				
+			return content;
+		},
+		readyForNextStep()
+		{			
+			var ready=true;
+			var errors="";
+			if (this.releaseDetails.targetDevices.length==0)
+			{
+				errors +="Please select a device/component to target. "
+				ready= false;
+			}
+			if (this.releaseDetails.name=="")
+			{
+				errors +="Please enter a release version. "
+				ready= false;
+			}
+
+			if (!ready)
+			{
+				this.errorMessage="Error(s): " + errors;
+			}
+			return ready;
+		},
+		atLastStep(step)
+		{
+			return (step==(Object.keys(this.releaseBuildInstructions).length));
+		},
+		clearErrors()
+		{
+			this.errorMessage="";
+		},
+		getNextCommonStep()
+		{
+			var nextStep = this.step+1;
+			var lowestCommonStep = this.step;
+			var possibleNextSteps=[];
+			if (this.atLastStep(this.step))
+			{
+				nextStep = this.step;
+			}
+			
+			for (var i =0; i< this.releaseDetails.targetDevices.length; i++) 
+    		{
+    			var device = this.releaseDetails.targetDevices[i];
+    			for (var j=nextStep; this.releaseBuildInstructions[j]!=undefined; j++)
+    			{
+    				var possibleStep =this.releaseBuildInstructions[j];
+    				
+    				// console.log(j, possibleStep.excludeStepFor[device.name]);
+	    			if (possibleStep.excludeStepFor[device.name]==undefined || possibleStep.excludeStepFor[device.name]==0)
+	    			{
+	    				possibleNextSteps.push(possibleStep.step);
+	    				break;
+	    			}
+    			}
+			}	
+
+			possibleNextSteps= possibleNextSteps.sort((a, b) => a - b);
+			if (possibleNextSteps[0]!=undefined)
+			{
+				nextStep = possibleNextSteps[0];	
+			}
+			else
+			{
+				nextStep=this.step;
+			}
+			return nextStep;
+		},
+		nextPrev(direction)
+		{
+			this.clearErrors();
+			//dont go to negative
+			if (direction<0 && this.step==0)
+			{
+				return;
+			}
+
+			//dont go beyond the last step
+			if (direction>0 && this.atLastStep(this.step))
+			{
+
+				return;
+			}
+
+			//go to beginning
+			if (direction==0)
+			{
+				this.step=0;
+				return;
+			}
+
+			if (direction<0)
+			{
+				this.step+=direction;
+			}
+			else
+			{
+				//check step requirements before going forward
+				if (this.readyForNextStep()==false)
+				{
+					return;
+				}
+				else
+				{
+					var nextStep = this.getNextCommonStep();
+					this.step =nextStep;		
+				}
+			}			
+		},
+		formatVersion(event)
+		{
+			if (event.key!='Backspace' && this.releaseDetails.name.length>0)
+			{
+				if (this.releaseDetails.name.length==1)
+				{
+					this.releaseDetails.name+='.';	
+				}
+				else if (this.releaseDetails.name.length==4)
+				{
+					this.releaseDetails.name+='.';	
+				}				
+			}
+		},
+		questionSelected(question, setOrUnset)
+		{
+			if (setOrUnset)
+			{
+				Vue.set(this.cultureDetails.selectedQuestionIds, question.Id, true);
+			}
+			else
+			{
+				Vue.delete(this.cultureDetails.selectedQuestionIds, question.Id);	
+			}
+		},
+		cultureAsTarget(culture, setOrUnset)
+		{
+			if (setOrUnset)
+			{
+				Vue.set(this.cultureDetails.targetCultureNames, culture.name, true);
+			}
+			else
+			{
+				Vue.delete(this.cultureDetails.targetCultureNames, culture.name);	
+			}
+			
+		},		
+		questionIsSelected(question)
+		{
+			return (this.cultureDetails.selectedQuestionIds[question.Id] && this.cultureDetails.selectedQuestionIds[question.Id]==1)
+		},
+		cultureIsTarget(culture)
+		{
+			// console.log(this.cultureDetails.targetCultures)
+			return (this.cultureDetails.targetCultureNames[culture.name] && this.cultureDetails.targetCultureNames[culture.name]==1)
+		},
+		toggleQuestionSelection(question)
+		{
+			if (!this.questionIsSelected(question))
+			{
+				this.addQuestion(question);
+			}
+			else
+			{
+				this.removeQuestion(question);
+			}
+		},
+		toggleSelection(culture)
+		{
+		
+			var alreadySelected=false;
+			if (this.cultureIsTarget(culture))
+			{
+				alreadySelected=true;
+			}		
+
+			for (var i=0; i<this.cultureDetails.targetCultures.length; i++)
+			{
+				var c = this.cultureDetails.targetCultures[i];
+				this.removeCulture(c);
+			}
+			if (!alreadySelected)
+			{
+				this.addCulture(culture);
+			}
+
+			// else
+			// {
+			// 	this.removeCulture(device);
+			// }
+		},		
+		// toggleSelection(device)
+		// {
+		// 	if (!this.cultureIsTarget(device))
+		// 	{
+		// 		this.addCulture(device);
+		// 	}
+		// 	else
+		// 	{
+		// 		this.removeCulture(device);
+		// 	}
+		// },
+		removeQuestion(question)
+		{
+			if (this.questionIsSelected(question))
+			{
+				for (var i=0; i<this.cultureDetails.selectedQuestions.length; i++)
+				{
+					if (this.cultureDetails.selectedQuestions[i]==question)
+					{
+						this.questionSelected(question, false);
+						this.cultureDetails.selectedQuestions.splice(i, 1);
+					}
+				}				
+			}
+		},
+		removeCulture(culture)
+		{
+			if (this.cultureIsTarget(culture))
+			{
+				for (var i=0; i<this.cultureDetails.targetCultures.length; i++)
+				{
+					if (this.cultureDetails.targetCultures[i]==culture)
+					{
+						this.cultureAsTarget(culture, false);
+						this.cultureDetails.targetCultures.splice(i, 1);
+					}
+				}				
+			}
+		},
+		addCulture(culture)
+		{
+			if (!this.cultureIsTarget(culture))
+			{
+				this.cultureAsTarget(culture, true);
+				this.cultureDetails.targetCultures.push(culture);
+			}
+		},
+		addQuestion(question)
+		{
+			if (!this.questionIsSelected(question))
+			{
+				this.questionSelected(question, true);
+				this.cultureDetails.selectedQuestions.push(question);
+			}
+		},
+		copyToClipboard(questionsArray)
+		{
+
+			var str="";
+			for (var i=0; i<questionsArray.length;i++)
+			{
+				str+="Q"+(i+1)+": ";
+				str+=questionsArray[i].Question+" (";
+				for (var j=0; j<questionsArray[i].Culture.length; j++)
+				{
+					str+=questionsArray[i].Culture[j]+", ";
+				}
+				str = str.slice(0,-2);
+				str+=") \n"
+			}
+			const el = document.createElement('textarea');
+			el.value = str;
+			el.setAttribute('readonly', '');
+			el.style.position = 'absolute';
+			el.style.left = '-9999px';
+			document.body.appendChild(el);
+			el.select();
+			document.execCommand('copy');
+			document.body.removeChild(el);
+			alert("Your questions have been copied to the clipboard.	");
+		},
+		initializeURLParamText()
+		{
+		  this.urlParams="?";
+		  this.urlParams += "releaseName="+this.releaseDetails.name;
+		  this.urlParams += "&mcm="+this.releaseDetails.mcm;
+		  this.urlParams += "&devices=[ "
+		  for (var i=0; i<this.releaseDetails.targetDevices.length; i++)
+		  {
+		  	var targetDevices = this.releaseDetails.targetDevices[i];
+
+		  	this.urlParams +=
+		  	"{" + '"name": "'+ targetDevices.name +'",';
+
+		  	if (targetDevices.runSanityTestQuestion!=undefined)
+		  	{
+		  		this.urlParams +='"runSanityTest": '+ targetDevices.runSanityTest +',';
+		  	}
+
+		  	if (targetDevices.hrQuestion!=undefined)
+		  	{
+		  		this.urlParams +='"includeHybridRouter": '+ targetDevices.includeHybridRouter +','
+		  	}
+
+		  	if (targetDevices.shsQuestion!=undefined)
+		  	{
+		  		this.urlParams +='"includeSHS": '+ targetDevices.includeSHS +','
+		  	}		  	
+
+		  	if (targetDevices.targetBranch!=undefined)
+		  	{
+		  		this.urlParams +='"targetBranch": "'+ targetDevices.targetBranch.name +'",'
+		  	}
+
+		  	if (targetDevices.patchBuildPrefix!=undefined)
+		  	{
+		  		this.urlParams +='"patchBuildPrefix": "'+ targetDevices.patchBuildPrefix.name +'",'
+		  	}
+		  	this.urlParams = this.urlParams.slice(0,-1);
+
+		  	this.urlParams+=
+		  	"},";
+		  }
+
+		  this.urlParams = this.urlParams.slice(0,-1);
+		  this.urlParams+="]";
+		},
+		toggleURLParams()
+		{
+		  this.showURLParams = !this.showURLParams;
+		  this.initializeURLParamText();
+		},
+		copyClipboard()
+		{
+		  var copyText = document.getElementById("urlParams");
+
+		  /* Select the text field */
+		  copyText.select();
+		  copyText.setSelectionRange(0, 99999); /*For mobile devices*/
+
+		  /* Copy the text inside the text field */
+		  document.execCommand("copy");			
+		},
+		startDrag(evt, item)
+		{
+			evt.dataTransfer.dropEffect = 'move'
+			evt.dataTransfer.effectAllowed = 'move'
+			evt.dataTransfer.setData('itemID', item.Id)
+			evt.target.style.opacity = "0.8";
+			// evt
+			//   .currentTarget
+			//   .style
+			//   .backgroundColor = 'yellow';		      
+		},
+		endDrag(evt)
+		{
+			evt.target.style.opacity = "1";
+		},
+		dragleave(evt)
+		{
+			evt.target.style.border =  "";
+		},
+		dragover(evt)
+		{
+			evt.target.style.border =  "3px dotted red";
+			// evt.target.style.margin =  "50px 50px 50px 50px";
+		},
+		onDrop (evt, newIndex) 
+		{
+			evt.target.style.border =  "";
+			const itemID = evt.dataTransfer.getData('itemID')
+			const item = this.cultureDetails.selectedQuestions.find(item => item.Id == itemID);
+			const oldIndex = this.cultureDetails.selectedQuestions.indexOf(item);
+			if (oldIndex > -1) 
+			{
+				this.cultureDetails.selectedQuestions.splice(newIndex, 0, this.cultureDetails.selectedQuestions.splice(oldIndex, 1)[0]);
+			}
+
+			evt
+			.dataTransfer
+			.clearData();
+
+		
+		    // console.log(item);
+		    // item.list = list
+		},
+		uuidv4() {
+		  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+		    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+		    return v.toString(16);
+		  });
+		},	
+		addCustomQuestion(questionText)
+		{
+			if (questionText!="")
+			{
+				var newQuestion  = {};
+				newQuestion.Question =  JSON.parse(JSON.stringify(questionText));
+				newQuestion.Culture = ["Custom"];
+				newQuestion.Id = this.uuidv4();
+				this.addQuestion(newQuestion);
+				this.newQuestion.Question="";
+			}
+
+		}
+	}
+});
+
+</script>
+<style scoped>
+body {
+	background-image: linear-gradient(180deg, #ff8a00, #e52e71) !important;
+	background: #EEE !important;
+	font-size: 12px !important;
+} 
+
+
+
+/* Style the form */
+.regForm {
+  /*background-image: linear-gradient(180deg, #ff8a00, #e52e71);*/
+  border-radius: 10px;
+  background: #FFF;
+  min-height: 1000px;
+  /*color: white;*/
+  border: "1px black";
+  margin: 10px auto;
+  padding: 40px;
+  width: 70%;
+  min-width: 300px;
+}
+
+
+/* Style the input fields */
+input {
+	padding: 10px;
+	width: 100%;
+	font-size: 17px;
+	border: 1px solid #aaaaaa;
+}
+
+.drop-zone {
+	background-color: #eee;
+	margin-bottom: 10px;
+	padding: 10px;
+}
+
+.drag-el {
+	background-color: #fff;
+	margin-bottom: 10px;
+	padding: 5px;
+}
+  
+</style>
+
+
+<link href="https://fonts.googleapis.com/css?family=Raleway" rel="stylesheet">
+<link rel="stylesheet" type="text/css" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+<link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
