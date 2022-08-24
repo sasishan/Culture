@@ -1,2 +1,2 @@
 # Culture
-Simple 1-1 tool for people managers
+1-1 productivity tool for people managers
